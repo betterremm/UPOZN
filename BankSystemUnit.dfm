@@ -17,24 +17,70 @@ object BankForm: TBankForm
   OnCreate = FormCreate
   OnHelp = FormHelp
   TextHeight = 15
-  object StringGrid1: TStringGrid
-    Left = 136
-    Top = 192
-    Width = 457
-    Height = 241
+  object SGMain: TStringGrid
+    Left = 8
+    Top = 136
+    Width = 620
+    Height = 304
+    ColCount = 4
+    DefaultColWidth = 150
+    DefaultRowHeight = 30
+    FixedCols = 0
+    RowCount = 2
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goFixedRowDefAlign]
+    ScrollBars = ssVertical
     TabOrder = 0
+    Visible = False
   end
   object CBChoice: TComboBox
     Left = 8
     Top = 8
     Width = 145
     Height = 23
-    ItemIndex = 0
+    Style = csDropDownList
     TabOrder = 1
-    Text = #1057#1095#1077#1090#1072
+    OnChange = CBChoiceChange
     Items.Strings = (
-      #1057#1095#1077#1090#1072
-      #1050#1083#1080#1077#1085#1090#1099)
+      #1050#1083#1080#1077#1085#1090#1099
+      #1057#1095#1077#1090#1072)
+  end
+  object BitBtnAdd: TBitBtn
+    Left = 64
+    Top = 80
+    Width = 75
+    Height = 25
+    Caption = 'BitBtnAdd'
+    Enabled = False
+    TabOrder = 2
+    OnClick = BitBtnAddClick
+  end
+  object BitBtnDelete: TBitBtn
+    Left = 200
+    Top = 80
+    Width = 75
+    Height = 25
+    Caption = 'BitBtnDelete'
+    Enabled = False
+    TabOrder = 3
+    OnClick = BitBtnDeleteClick
+  end
+  object BitBtnEdit: TBitBtn
+    Left = 328
+    Top = 80
+    Width = 75
+    Height = 25
+    Caption = 'BitBtnEdit'
+    Enabled = False
+    TabOrder = 4
+  end
+  object BitBtnSort: TBitBtn
+    Left = 472
+    Top = 80
+    Width = 75
+    Height = 25
+    Caption = 'BitBtnSort'
+    Enabled = False
+    TabOrder = 5
   end
   object MainMenu: TMainMenu
     Left = 600

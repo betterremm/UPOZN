@@ -127,6 +127,12 @@
             <Form>BankForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="AddEditUnit.pas">
+            <Form>AddEditForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="DevUnit.pas"/>
+        <DCCReference Include="InstrUnit.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
