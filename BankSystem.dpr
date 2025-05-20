@@ -2,15 +2,13 @@ program BankSystem;
 
 uses
   Vcl.Forms,
-  UserProgramUnit in 'UserProgramUnit.pas' {UserProgramForm},
-  WatchListsUnit in 'WatchListsUnit.pas' {WatchListsForm};
+  BankSystemUnit in 'BankSystemUnit.pas' {BankForm};
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TUserProgramForm, UserProgramForm);
-  Application.CreateForm(TWatchListsForm, WatchListsForm);
+  Application.CreateForm(TBankForm, BankForm);
   Application.Run;
 end.

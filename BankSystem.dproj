@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{44C7A818-3498-4E67-9F53-3841254F6CD6}</ProjectGuid>
+        <ProjectGuid>{672AD596-4A32-43CD-8F83-F33BCBAC348D}</ProjectGuid>
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
@@ -123,12 +123,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="UserProgramUnit.pas">
-            <Form>UserProgramForm</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="WatchListsUnit.pas">
-            <Form>WatchListsForm</Form>
+        <DCCReference Include="BankSystemUnit.pas">
+            <Form>BankForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
