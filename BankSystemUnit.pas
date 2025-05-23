@@ -38,14 +38,13 @@ Type
         BitBtnDelete: TBitBtn;
         BitBtnEdit: TBitBtn;
         BitBtnSort: TBitBtn;
-    LbComboBox: TLabel;
-    temp: TLabel;
-    BitBtnShowAccounts: TBitBtn;
+        LbComboBox: TLabel;
+        BitBtnShowAccounts: TBitBtn;
+        BitBtnTransferMoney: TBitBtn;
         Procedure FormCreate(Sender: TObject);
         Function FormHelp(Command: Word; Data: THelpEventData; Var CallHelp: Boolean): Boolean;
         Procedure NCloseClick(Sender: TObject);
         Procedure NSaveClick(Sender: TObject);
-        Procedure NOpenClick(Sender: TObject);
         Procedure NDevClick(Sender: TObject);
         Procedure NInstrClick(Sender: TObject);
         Procedure CBChoiceChange(Sender: TObject);
@@ -56,10 +55,10 @@ Type
         Procedure BitBtnAddClick(Sender: TObject);
         Procedure BitBtnDeleteClick(Sender: TObject);
         Procedure DeleteClient();
-        Procedure DeleteAccount();
+        Procedure DeleteBankAccount();
         Procedure DeleteAllClientAccounts(ClientCode: Integer);
         Function IsClientUnique(Code: Integer): Boolean;
-        Function IsAccountUnique(AccNumber: Integer): Boolean;
+        Function IsBankAccountUnique(AccNumber: Integer): Boolean;
         Procedure SGMainSelectCell(Sender: TObject; ACol, ARow: LongInt; Var CanSelect: Boolean);
         Procedure BitBtnEditClick(Sender: TObject);
         Procedure AddClient(Code: Integer; SurName: String);
@@ -67,16 +66,23 @@ Type
         Function DoesClientHaveBankAccount(Code: Integer): Boolean;
         Procedure ChangeAllBankAccountCodes(Target, Replacement: Integer);
         Procedure ChangeClientCode(Target, Replacement: Integer);
-
+        Procedure BitBtnSortClick(Sender: TObject);
+        Procedure BitBtnTransferMoneyClick(Sender: TObject);
+        Function TransferMoney(Sender, Recipient: Integer; Amount: Currency; SenderPaysCollection: Boolean): Boolean;
+        Procedure FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
+        Procedure NOpenClick(Sender: TObject);
+        Procedure ClearClients;
+        Procedure ClearBankAccounts;
+        Procedure BitBtnShowAccountsClick(Sender: TObject);
     Private
-    { Private declarations }
+        { Private declarations }
 
-        Type
+    Public Type
         //Сберегательный, Расчетный, Карточный, Корреспондентский
 
-
+        TFileStatus = (FsOK, FsNotFound, FsLocked, FsInvalidSignature);
         //типы банк счетов
-
+        TBankAccountType = TBankAccountType;
         PBankAccountNode = ^TBankAccountNode;
 
         TBankAccountNode = Record
@@ -105,8 +111,8 @@ Type
             Head, Tail: PClientNode;
         End;
 
-    Public Const
-        MaxCollectionPercentage = 1000;
+    Const
+        MaxCollectionPercentage = 100;
 
     Var
         BankAccountList: TBankAccountList;
@@ -129,7 +135,177 @@ Uses
     DevUnit,
     InstrUnit,
     AddEditClientUnit,
-    AddEditBankAccountUnit;
+    AddEditBankAccountUnit,
+    TransferMoneyUnit,
+    ShowAccountsUnit;
+
+Procedure TBankForm.ClearClients;
+Var
+    Temp, Curr: PClientNode;
+Begin
+    Curr := ClientList.Head;
+    While Assigned(Curr) Do
+    Begin
+        Temp := Curr;
+        Curr := Curr^.Next;
+        Dispose(Temp);
+    End;
+    ClientList.Head := Nil;
+    ClientList.Tail := Nil;
+End;
+
+Procedure TBankForm.ClearBankAccounts;
+Var
+    Temp, Curr: PBankAccountNode;
+Begin
+    Curr := BankAccountList.Head;
+    While Assigned(Curr) Do
+    Begin
+        Temp := Curr;
+        Curr := Curr^.Next;
+        Dispose(Temp);
+    End;
+    BankAccountList.Head := Nil;
+    BankAccountList.Tail := Nil;
+End;
+
+Function RoundCurrencyTo2(Value: Currency): Currency;
+Var
+    IntPart: Int64;
+    FracPart: Currency;
+    ThirdDigit: Integer;
+Begin
+    //Сдвигаем на 2 знака, чтобы округлять по 3-му знаку после запятой
+    Value := Value * 1000;
+    IntPart := Trunc(Value);
+    FracPart := Value - IntPart;
+
+    ThirdDigit := IntPart Mod 10;
+    IntPart := IntPart Div 10;
+
+    //Bankers' rounding
+    If ThirdDigit > 5 Then
+        Inc(IntPart)
+    Else
+        If ThirdDigit = 5 Then
+        Begin
+            If Odd(IntPart) Then
+                Inc(IntPart);
+        End;
+
+    Result := IntPart / 100;
+End;
+
+Function TBankForm.TransferMoney(Sender, Recipient: Integer; Amount: Currency; SenderPaysCollection: Boolean): Boolean;
+Var
+    SenderNode, RecipientNode: PBankAccountNode;
+    Temp: PBankAccountNode;
+    Collection, TempAmount: Currency;
+Begin
+    //Поиск отправителя и получателя по AccNumber
+    SenderNode := Nil;
+    RecipientNode := Nil;
+    Temp := BankAccountList.Head;
+    While Temp <> Nil Do
+    Begin
+        If Temp^.AccNumber = Sender Then
+            SenderNode := Temp
+        Else
+            If Temp^.AccNumber = Recipient Then
+                RecipientNode := Temp;
+
+        Temp := Temp^.Next;
+    End;
+
+    //Вычисление комиссии
+    Collection := RoundCurrencyTo2(Amount * SenderNode^.CollectionPercentage) / 100;
+
+    //Проверка баланса отправителя
+    If SenderPaysCollection Then
+    Begin
+        TempAmount := RoundCurrencyTo2(Amount + Collection);
+        If SenderNode^.Balance < TempAmount Then
+            TransferMoney := False
+        Else
+        Begin
+            SenderNode^.Balance := SenderNode^.Balance - TempAmount;
+            RecipientNode^.Balance := RecipientNode^.Balance + Amount;
+        End;
+    End
+    Else
+    Begin
+        If SenderNode^.Balance < Amount Then
+            TransferMoney := False
+        Else
+        Begin
+            SenderNode^.Balance := SenderNode^.Balance - Amount;
+            RecipientNode^.Balance := RecipientNode^.Balance + TempAmount;
+        End;
+    End;
+
+End;
+
+Procedure SwapBankAccountNodes(N1, N2: TBankForm.PBankAccountNode);
+Var
+    Prev1, Next2, Temp: TBankForm.PBankAccountNode;
+Begin
+    If N1 <> N2 Then
+    Begin
+
+        //N1 должен быть перед N2
+        If N2.Prev = N1 Then
+        Begin
+            //Обмениваем местами: N1 <-> N2 (соседние)
+            N1.Next := N2.Next;
+            N2.Prev := N1.Prev;
+
+            If N1.Next <> Nil Then
+                N1.Next.Prev := N1;
+            If N2.Prev <> Nil Then
+                N2.Prev.Next := N2;
+
+            N2.Next := N1;
+            N1.Prev := N2;
+        End
+        Else
+        Begin
+            //Несоседние узлы
+            Prev1 := N1.Prev;
+            Next2 := N2.Next;
+
+            If N1.Next <> Nil Then
+                N1.Next.Prev := N2;
+            If N2.Prev <> Nil Then
+                N2.Prev.Next := N1;
+
+            If Prev1 <> Nil Then
+                Prev1.Next := N2;
+            If Next2 <> Nil Then
+                Next2.Prev := N1;
+
+            Temp := N1.Next;
+            N1.Next := N2.Next;
+            N2.Next := Temp;
+
+            Temp := N1.Prev;
+            N1.Prev := N2.Prev;
+            N2.Prev := Temp;
+        End;
+
+        //Обновление головы и хвоста
+        If BankForm.BankAccountList.Head = N1 Then
+            BankForm.BankAccountList.Head := N2
+        Else
+            If BankForm.BankAccountList.Head = N2 Then
+                BankForm.BankAccountList.Head := N1;
+
+        If BankForm.BankAccountList.Tail = N1 Then
+            BankForm.BankAccountList.Tail := N2
+        Else
+            If BankForm.BankAccountList.Tail = N2 Then
+                BankForm.BankAccountList.Tail := N1;
+    End;
+End;
 
 Procedure TBankForm.ChangeClientCode(Target, Replacement: Integer);
 Var
@@ -174,7 +350,7 @@ Begin
     IsClientUnique := IsUnique;
 End;
 
-Function TBankForm.IsAccountUnique(AccNumber: Integer): Boolean;
+Function TBankForm.IsBankAccountUnique(AccNumber: Integer): Boolean;
 Var
     IsUnique: Boolean;
     TempNode: PBankAccountNode;
@@ -188,7 +364,7 @@ Begin
         Else
             TempNode := TempNode^.Next;
     End;
-    IsAccountUnique := IsUnique;
+    IsBankAccountUnique := IsUnique;
 End;
 
 Procedure TBankForm.AddClient(Code: Integer; SurName: String);
@@ -199,7 +375,7 @@ Begin
     If IsClientUnique(Code) Then
     Begin
         New(PClient);
-        PClient^.Code := Code;
+        PClient^.Code := Abs(Code);
         PClient^.SurName := SurName;
         PClient^.Next := Nil;
         PClient^.Prev := BankForm.ClientList.Tail;
@@ -224,14 +400,14 @@ Var
     PAccount: TBankForm.PBankAccountNode;
 Begin
 
-    If IsAccountUnique(AccNumber) Then
+    If IsBankAccountUnique(AccNumber) Then
     Begin
         New(PAccount);
-        PAccount^.Code := Code;
-        PAccount^.AccNumber := AccNumber;
-        PAccount^.Balance := Balance;
+        PAccount^.Code := Abs(Code);
+        PAccount^.AccNumber := Abs(AccNumber);
+        PAccount^.Balance := RoundCurrencyTo2(Balance);
         PAccount^.AccType := AccType;
-        PAccount^.CollectionPercentage := CollectionPercentage;
+        PAccount^.CollectionPercentage := RoundCurrencyTo2(CollectionPercentage);
         PAccount^.Next := Nil;
         PAccount^.Prev := BankForm.BankAccountList.Tail;
         If BankForm.BankAccountList.Head = Nil Then
@@ -249,7 +425,7 @@ Begin
         MessageBox(BankForm.Handle, 'Счет с таким номером уже существует!', 'Внимание', MB_ICONWARNING + MB_OK);
 End;
 
-Procedure DeleteAccountNode(DelNode: TBankForm.PBankAccountNode);
+Procedure DeleteBankAccountNode(DelNode: TBankForm.PBankAccountNode);
 Begin
     If (DelNode.Prev = Nil) And (DelNode.Next = Nil) Then
     Begin
@@ -292,7 +468,7 @@ Begin
 
 End;
 
-Procedure TBankForm.DeleteAccount();
+Procedure TBankForm.DeleteBankAccount();
 Var
     DelNode: PBankAccountNode;
     I: Integer;
@@ -303,7 +479,7 @@ Begin
         DelNode := BankAccountList.Head;
         For I := 2 To SGMain.Selection.Top Do
             DelNode := DelNode.Next;
-        DeleteAccountNode(DelNode);
+        DeleteBankAccountNode(DelNode);
         ShowBankAccounts();
     End;
 End;
@@ -318,7 +494,7 @@ Begin
         If DelNode^.Code = ClientCode Then
         Begin
             TempNode := DelNode^.Next;
-            DeleteAccountNode(DelNode);
+            DeleteBankAccountNode(DelNode);
             DelNode := TempNode;
         End
         Else
@@ -375,6 +551,7 @@ Var
     I: Integer;
 Begin
     I := 1;
+    BitBtnSort.Enabled := False;
     If ClientList.Head = Nil Then
     Begin
         SGMain.Rows[1].Clear;
@@ -394,6 +571,7 @@ Begin
         End
         Until TempNodePointer = Nil;
         SGMain.RowCount := I;
+
     End;
 End;
 
@@ -408,8 +586,8 @@ Begin
     Else
     Begin
         BitBtnDelete.Enabled := False;
-        BitBtnEdit.Enabled := True;
-    End
+        BitBtnEdit.Enabled := False;
+    End;
 End;
 
 Procedure TBankForm.ShowBankAccounts();
@@ -424,6 +602,8 @@ Begin
         SGMain.RowCount := 2;
         BitBtnDelete.Enabled := False;
         BitBtnEdit.Enabled := False;
+        BitBtnSort.Enabled := False;
+        BitBtnTransferMoney.Enabled := False;
     End
     Else
     Begin
@@ -439,6 +619,8 @@ Begin
             TempNodePointer := TempNodePointer.Next;
         End
         Until TempNodePointer = Nil;
+        BitBtnSort.Enabled := True;
+        BitBtnTransferMoney.Enabled := True;
         SGMain.RowCount := I;
     End;
 End;
@@ -455,6 +637,8 @@ Begin
     ShowClients;
     SGMain.Visible := True;
     BitBtnAdd.Enabled := True;
+    BitBtnTransferMoney.Enabled := False;
+
 End;
 
 Procedure TBankForm.WorkWithBankAccounts();
@@ -509,7 +693,7 @@ Begin
         DeleteClient
     Else
         If CBChoice.ItemIndex = CB_CHOICE_ACCOUNTS Then
-            DeleteAccount;
+            DeleteBankAccount;
 
 End;
 
@@ -579,7 +763,7 @@ Begin
                 If ClosedByButton Then
                 Begin
                     If (StrToInt(EditAccNumber.Text) = TempBankAccountPointer^.AccNumber) Or
-                        IsAccountUnique(StrToInt(EditAccNumber.Text)) Then
+                        IsBankAccountUnique(StrToInt(EditAccNumber.Text)) Then
                     Begin
                         If (StrToInt(EditCode.Text) <> TempBankAccountPointer^.Code) And Not IsClientUnique(TempBankAccountPointer^.Code)
                             And (MessageBox(BankForm.Handle, 'Вы желаете так же изменить код клиента владельца аккаунта?', 'Изменить?',
@@ -603,12 +787,90 @@ Begin
 
 End;
 
+Procedure TBankForm.BitBtnShowAccountsClick(Sender: TObject);
+Var
+    TempClientNode: PClientNode;
+    I: Integer;
+Begin
+    ShowAccountsForm := TShowAccountsForm.Create(Self);
+    TempClientNode := ClientList.Head;
+    For I := 2 To SGMain.Selection.Top Do
+        TempClientNode := TempClientNode.Next;
+
+
+
+    ShowAccountsForm.ShowModal();
+
+    ShowAccountsForm.Destroy;
+    ShowAccountsForm := Nil;
+    ShowClients;
+End;
+
+Procedure TBankForm.BitBtnSortClick(Sender: TObject);
+
+Var
+    INode, JNode: PBankAccountNode;
+    Swapped: Boolean;
+
+Begin
+    If (BankAccountList.Head <> Nil) And (BankAccountList.Head.Next <> Nil) Then
+        Repeat
+            Swapped := False;
+            INode := BankAccountList.Head;
+            While (INode <> Nil) And (INode.Next <> Nil) Do
+            Begin
+                JNode := INode.Next;
+                If INode.AccType > JNode.AccType Then
+                Begin
+                    SwapBankAccountNodes(INode, JNode);
+                    Swapped := True;
+                    If INode.Prev <> Nil Then
+                        INode := INode.Prev;
+                End
+                Else
+                    INode := INode.Next;
+            End;
+        Until Not Swapped;
+
+    ShowBankAccounts();
+End;
+
+Procedure TBankForm.BitBtnTransferMoneyClick(Sender: TObject);
+Begin
+    With TransferMoneyForm Do
+    Begin
+        TransferMoneyForm := TTransferMoneyForm.Create(Self);
+        TransferMoneyForm.ShowModal();
+        If TransferMoneyForm.ClosedByButton Then
+            If Not IsBankAccountUnique(StrToInt(EditSender.Text)) And Not IsBankAccountUnique(StrToInt(EditRecipient.Text)) Then
+            Begin
+                If TransferMoney(StrToInt(EditSender.Text), StrToInt(EditRecipient.Text), StrToCurr(EditAmount.Text),
+                    CBSenderPays.Checked) Then
+                    MessageBox(BankForm.Handle, 'Перевод успешен!', 'Успех!', MB_ICONINFORMATION + MB_OK)
+                Else
+                    MessageBox(BankForm.Handle, 'Недостаточно средств!', 'Отклонено!', MB_ICONWARNING + MB_OK);
+            End
+            Else
+                MessageBox(BankForm.Handle, 'Был введен несуществующий пользователь, перевод отклонен!', 'Внимание!',
+                    MB_ICONWARNING + MB_OK);
+        TransferMoneyForm.Destroy;
+        TransferMoneyForm := Nil;
+    End;
+    ShowBankAccounts;
+End;
+
 Procedure TBankForm.CBChoiceChange(Sender: TObject);
 Begin
     If CBChoice.ItemIndex = CB_CHOICE_CLIENTS Then
         WorkWithClients()
     Else
         WorkWithBankAccounts();
+End;
+
+Procedure TBankForm.FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
+Begin
+    CanClose := MessageBox(BankForm.Handle, 'Вы уверены что хотите выйти?', 'Выйти?', MB_ICONQUESTION + MB_YESNO) = ID_YES;
+
 End;
 
 Procedure TBankForm.FormCreate(Sender: TObject);
@@ -650,14 +912,62 @@ Begin
     InstrForm := Nil;
 End;
 
+Function OpenBankFile(Const AFileName: String): TBankForm.TFileStatus; StdCall; External 'FileOperations.dll';
+Function SaveBankFile(Const AFileName: String): TBankForm.TFileStatus; StdCall; External 'FileOperations.dll';
+
 Procedure TBankForm.NOpenClick(Sender: TObject);
+Var
+    Status: TFileStatus;
 Begin
-    //TODO: OpenFile
+    If OpenDialog.Execute Then
+    Begin
+        //Очистка текущих списков, если требуется
+        ClearClients;
+        ClearBankAccounts;
+        Status := OpenBankFile(OpenDialog.FileName);
+        Case Status Of
+            FsOK:
+                ShowMessage('Файл успешно загружен.');
+            FsNotFound:
+                Begin
+                    ShowMessage('Файл не найден.');
+                    ClearClients;
+                    ClearBankAccounts;
+                End;
+            FsLocked:
+                Begin
+                    ShowMessage('Файл занят или недоступен.');
+                    ClearClients;
+                    ClearBankAccounts;
+                End;
+            FsInvalidSignature:
+                Begin
+                    ShowMessage('Неверная структура файла.');
+                    ClearClients;
+                    ClearBankAccounts;
+                End;
+
+        End;
+    End;
 End;
 
 Procedure TBankForm.NSaveClick(Sender: TObject);
+Var
+    Status: TFileStatus;
 Begin
-    //TODO: SaveFile
+    If (BankAccountList.Head = Nil) Or (ClientList.Head = Nil) Then
+        ShowMessage('Сначала добавьте хотя бы по одной записи в каждом из списков.')
+    Else
+        If SaveDialog.Execute Then
+        Begin
+            Status := SaveBankFile(SaveDialog.FileName);
+            Case Status Of
+                FsOK:
+                    ShowMessage('Файл успешно сохранён.');
+                FsLocked:
+                    ShowMessage('Не удалось сохранить файл. Он занят другим процессом.');
+            End;
+        End;
 End;
 
 End.

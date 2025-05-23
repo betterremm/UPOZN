@@ -1,4 +1,4 @@
-Unit AddEditBankAccountUnit;
+Unit TransferMoneyUnit;
 
 Interface
 
@@ -15,51 +15,36 @@ Uses
     Vcl.StdCtrls;
 
 Type
-    FillArray = Array [1 .. 5] Of Boolean;
-
-    TAddEditBankAccountForm = Class(TForm)
-        EditCode: TEdit;
-        LbCode: TLabel;
+    TTransferMoneyForm = Class(TForm)
+        EditSender: TEdit;
+        EditRecipient: TEdit;
+        EditAmount: TEdit;
+        LbSender: TLabel;
+        LbRecipient: TLabel;
+        Label1: TLabel;
         BtnAccept: TButton;
-        EditAccNumber: TEdit;
-        LbAccNumber: TLabel;
-        EditBalance: TEdit;
-        LbBalance: TLabel;
-        EditCollectionPercentage: TEdit;
-        LbCollectionPercentage: TLabel;
-        CBType: TComboBox;
-        LbAccountType: TLabel;
+        CBSenderPays: TCheckBox;
         Procedure FormCreate(Sender: TObject);
         Function FormHelp(Command: Word; Data: THelpEventData; Var CallHelp: Boolean): Boolean;
-        Procedure EditNumKeyPress(Sender: TObject; Var Key: Char);
-        Procedure EditCodeChange(Sender: TObject);
+        Procedure EditAmountChange(Sender: TObject);
+        Procedure EditAmountKeyPress(Sender: TObject; Var Key: Char);
+        Procedure EditRecipientKeyPress(Sender: TObject; Var Key: Char);
+        Procedure EditRecipientChange(Sender: TObject);
+        Procedure EditSenderChange(Sender: TObject);
         Procedure BtnAcceptClick(Sender: TObject);
-        Procedure EditAccNumberChange(Sender: TObject);
-        Procedure EditDecimalKeyPress(Sender: TObject; Var Key: Char);
-        Procedure EditBalanceChange(Sender: TObject);
-        Procedure CBTypeChange(Sender: TObject);
-        Procedure EditCollectionPercentageChange(Sender: TObject);
     Private Const
         TAllowedKeys: Set Of Char = ['0' .. '9', #8, #127];
-
     Public
+        IsFilled: Array [1 .. 3] Of Boolean;
         ClosedByButton: Boolean;
-
-    Var
-        IsFilled: FillArray;
     End;
 
 Var
-    AddEditBankAccountForm: TAddEditBankAccountForm;
+    TransferMoneyForm: TTransferMoneyForm;
 
 Implementation
 
 {$R *.dfm}
-
-Function IsFilledCheck(F: FillArray): Boolean;
-Begin
-    IsFilledCheck := F[1] And F[2] And F[3] And F[4] And F[5];
-End;
 
 Function IsCurrIntCorrect(Var Text: String): Boolean;
 Var
@@ -159,61 +144,37 @@ Begin
     IsCurrValueCorrect := IsCorrect;
 End;
 
-Procedure TAddEditBankAccountForm.BtnAcceptClick(Sender: TObject);
+Procedure TTransferMoneyForm.BtnAcceptClick(Sender: TObject);
 Begin
     ClosedByButton := True;
     Close
 End;
 
-Procedure TAddEditBankAccountForm.CBTypeChange(Sender: TObject);
-Begin
-    IsFilled[4] := True;
-    BtnAccept.Enabled := IsFilledCheck(IsFilled);
-End;
-
-Procedure TAddEditBankAccountForm.EditAccNumberChange(Sender: TObject);
+Procedure TTransferMoneyForm.EditAmountChange(Sender: TObject);
 Var
     Text: String;
 Begin
-    Text := EditAccNumber.Text;
-    If Not IsCurrIntCorrect(Text) Then
-    Begin
-        EditAccNumber.Text := Text;
-        EditAccNumber.SelStart := Length(Text);
-    End;
-    If Length(EditAccNumber.Text) > 0 Then
-        IsFilled[2] := True
-    Else
-        IsFilled[2] := False;
-
-    BtnAccept.Enabled := IsFilledCheck(IsFilled);
-End;
-
-Procedure TAddEditBankAccountForm.EditBalanceChange(Sender: TObject);
-Var
-    Text: String;
-Begin
-    Text := EditBalance.Text;
+    Text := EditAmount.Text;
     If Not IsCurrValueCorrect(Text) Then
     Begin
-        EditBalance.Text := Text;
-        EditBalance.SelStart := Length(Text);
+        EditAmount.Text := Text;
+        EditAmount.SelStart := Length(Text);
     End;
-    If (Length(Text) > 9) And (StrToCurr(EditBalance.Text) > 999999999.99) Then
+    If (Length(Text) > 0) And (StrToCurr(EditAmount.Text) > 999999999.99) Then
     Begin
-        EditBalance.Text := '999999999,99';
-        EditBalance.SelStart := Length(EditBalance.Text);
+        EditAmount.Text := '999999999,99';
+        EditAmount.SelStart := Length(Text);
     End;
 
-    If Length(EditBalance.Text) > 0 Then
+    If (Length(EditAmount.Text) > 0) And (StrToCurr(EditAmount.Text) > 0) Then
         IsFilled[3] := True
     Else
         IsFilled[3] := False;
 
-    BtnAccept.Enabled := IsFilledCheck(IsFilled);
+    BtnAccept.Enabled := IsFilled[1] And IsFilled[2] And IsFilled[3];
 End;
 
-Procedure TAddEditBankAccountForm.EditDecimalKeyPress(Sender: TObject; Var Key: Char);
+Procedure TTransferMoneyForm.EditAmountKeyPress(Sender: TObject; Var Key: Char);
 Begin
     If Key = '.' Then
         Key := ','
@@ -222,71 +183,61 @@ Begin
             Key := #0;
 End;
 
-Procedure TAddEditBankAccountForm.EditCodeChange(Sender: TObject);
+Procedure TTransferMoneyForm.EditRecipientChange(Sender: TObject);
 Var
     Text: String;
 Begin
-    Text := EditCode.Text;
+    Text := EditRecipient.Text;
     If Not IsCurrIntCorrect(Text) Then
     Begin
-        EditCode.Text := Text;
-        EditCode.SelStart := Length(Text);
+        EditRecipient.Text := Text;
+        EditRecipient.SelStart := Length(Text);
     End;
-
-    If Length(EditCode.Text) > 0 Then
-        IsFilled[1] := True
+    If Length(EditRecipient.Text) > 0 Then
+        IsFilled[2] := True
     Else
-        IsFilled[1] := False;
+        IsFilled[2] := False;
 
-    BtnAccept.Enabled := IsFilledCheck(IsFilled);
-
+    BtnAccept.Enabled := IsFilled[1] And IsFilled[2] And IsFilled[3];
 End;
 
-Procedure TAddEditBankAccountForm.EditCollectionPercentageChange(Sender: TObject);
-
-Var
-    Text: String;
-Begin
-    Text := EditCollectionPercentage.Text;
-    If Not IsCurrValueCorrect(Text) Then
-    Begin
-        EditCollectionPercentage.Text := Text;
-        EditCollectionPercentage.SelStart := Length(Text);
-    End;
-    If (Length(Text) > 2) And (StrToCurr(EditCollectionPercentage.Text) > 99.99) Then
-    Begin
-        EditCollectionPercentage.Text := '99,99';
-        EditCollectionPercentage.SelStart := Length(EditCollectionPercentage.Text);
-    End;
-    If Length(EditCollectionPercentage.Text) > 0 Then
-        IsFilled[5] := True
-    Else
-        IsFilled[5] := False;
-
-    BtnAccept.Enabled := IsFilledCheck(IsFilled);
-End;
-
-Procedure TAddEditBankAccountForm.EditNumKeyPress(Sender: TObject; Var Key: Char);
+Procedure TTransferMoneyForm.EditRecipientKeyPress(Sender: TObject; Var Key: Char);
 Begin
     If Not(Key In TAllowedKeys) Then
         Key := #0;
 End;
 
-Procedure TAddEditBankAccountForm.FormCreate(Sender: TObject);
+Procedure TTransferMoneyForm.EditSenderChange(Sender: TObject);
+
+Var
+    Text: String;
 Begin
-    ClosedByButton := False;
+    Text := EditSender.Text;
+    If Not IsCurrIntCorrect(Text) Then
+    Begin
+        EditSender.Text := Text;
+        EditSender.SelStart := Length(Text);
+    End;
+    If Length(EditSender.Text) > 0 Then
+        IsFilled[1] := True
+    Else
+        IsFilled[1] := False;
+
+    BtnAccept.Enabled := IsFilled[1] And IsFilled[2] And IsFilled[3];
+End;
+
+Procedure TTransferMoneyForm.FormCreate(Sender: TObject);
+Begin
     IsFilled[1] := False;
     IsFilled[2] := False;
     IsFilled[3] := False;
-    IsFilled[4] := False;
-    IsFilled[5] := False;
     Constraints.MaxHeight := Height;
     Constraints.MaxWidth := Width;
     Constraints.MinHeight := Height;
     Constraints.MinWidth := Width;
 End;
 
-Function TAddEditBankAccountForm.FormHelp(Command: Word; Data: THelpEventData; Var CallHelp: Boolean): Boolean;
+Function TTransferMoneyForm.FormHelp(Command: Word; Data: THelpEventData; Var CallHelp: Boolean): Boolean;
 Begin
     CallHelp := False;
     FormHelp := True;

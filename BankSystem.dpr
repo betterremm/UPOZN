@@ -10,7 +10,9 @@ uses
   AddEditClientUnit in 'AddEditClientUnit.pas' {AddEditClientForm},
   DevUnit in 'DevUnit.pas',
   InstrUnit in 'InstrUnit.pas',
-  AddEditBankAccountUnit in 'AddEditBankAccountUnit.pas' {AddEditBankAccountForm};
+  AddEditBankAccountUnit in 'AddEditBankAccountUnit.pas' {AddEditBankAccountForm},
+  TransferMoneyUnit in 'TransferMoneyUnit.pas' {TransferMoneyForm},
+  ShowAccountsUnit in 'ShowAccountsUnit.pas' {ShowAccountsForm};
 
 {$R *.res}
 
@@ -19,5 +21,7 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TBankForm, BankForm);
   Application.CreateForm(TAddEditBankAccountForm, AddEditBankAccountForm);
+  Application.CreateForm(TTransferMoneyForm, TransferMoneyForm);
+  Application.CreateForm(TShowAccountsForm, ShowAccountsForm);
   Application.Run;
 end.

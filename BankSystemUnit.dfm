@@ -5,7 +5,7 @@ object BankForm: TBankForm
   BorderStyle = bsSingle
   Caption = #1055#1086#1077#1041#1072#1085#1082
   ClientHeight = 441
-  ClientWidth = 624
+  ClientWidth = 609
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,6 +14,7 @@ object BankForm: TBankForm
   Font.Style = []
   Menu = MainMenu
   Position = poScreenCenter
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnHelp = FormHelp
   TextHeight = 15
@@ -24,17 +25,10 @@ object BankForm: TBankForm
     Height = 15
     Caption = #1042#1099#1073#1077#1088#1080#1090#1077', '#1089' '#1095#1077#1084' '#1088#1072#1073#1086#1090#1072#1090#1100
   end
-  object temp: TLabel
-    Left = 464
-    Top = 27
-    Width = 28
-    Height = 15
-    Caption = 'todo:'
-  end
   object SGMain: TStringGrid
     Left = 1
     Top = 138
-    Width = 620
+    Width = 608
     Height = 304
     ColCount = 4
     DefaultColWidth = 150
@@ -90,22 +84,34 @@ object BankForm: TBankForm
     OnClick = BitBtnEditClick
   end
   object BitBtnSort: TBitBtn
-    Left = 456
-    Top = 48
+    Left = 312
+    Top = 79
     Width = 75
     Height = 25
     Caption = 'BitBtnSort'
     Enabled = False
     TabOrder = 5
+    OnClick = BitBtnSortClick
   end
   object BitBtnShowAccounts: TBitBtn
-    Left = 432
+    Left = 408
     Top = 79
     Width = 121
     Height = 25
     Caption = 'BitBtnShowAccounts'
     Enabled = False
     TabOrder = 6
+    OnClick = BitBtnShowAccountsClick
+  end
+  object BitBtnTransferMoney: TBitBtn
+    Left = 408
+    Top = 48
+    Width = 121
+    Height = 25
+    Caption = 'BitBtnTransferMoney'
+    Enabled = False
+    TabOrder = 7
+    OnClick = BitBtnTransferMoneyClick
   end
   object MainMenu: TMainMenu
     Left = 600
@@ -114,10 +120,12 @@ object BankForm: TBankForm
       Caption = #1060#1072#1081#1083
       object NOpen: TMenuItem
         Caption = #1054#1090#1082#1088#1099#1090#1100
+        ShortCut = 16463
         OnClick = NOpenClick
       end
       object NSave: TMenuItem
         Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
+        ShortCut = 16467
         OnClick = NSaveClick
       end
       object NBlank: TMenuItem
@@ -125,6 +133,7 @@ object BankForm: TBankForm
       end
       object NClose: TMenuItem
         Caption = #1047#1072#1082#1088#1099#1090#1100
+        ShortCut = 16465
         OnClick = NCloseClick
       end
     end

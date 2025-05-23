@@ -96,7 +96,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
     Top = 240
     Width = 121
     Height = 23
-    MaxLength = 6
+    MaxLength = 4
     TabOrder = 5
     OnChange = EditCollectionPercentageChange
     OnKeyPress = EditDecimalKeyPress
