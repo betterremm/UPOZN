@@ -143,8 +143,12 @@
             <Form>TransferMoneyForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="ShowAccountsUnit.pas">
-            <Form>ShowAccountsForm</Form>
+        <DCCReference Include="ShowUnit.pas">
+            <Form>ShowForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="SearchUnit.pas">
+            <Form>SearchForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">

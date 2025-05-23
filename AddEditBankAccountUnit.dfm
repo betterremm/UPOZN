@@ -47,7 +47,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
   object LbAccountType: TLabel
     Left = 24
     Top = 169
-    Width = 53
+    Width = 54
     Height = 15
     Caption = #1058#1080#1087' '#1089#1095#1077#1090#1072
   end

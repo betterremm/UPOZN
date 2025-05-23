@@ -3,7 +3,7 @@ object DevForm: TDevForm
   Top = 0
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
-  Caption = 'DevForm'
+  Caption = #1054' '#1088#1072#1079#1088#1072#1073#1086#1090#1080#1095#1082#1077
   ClientHeight = 205
   ClientWidth = 343
   Color = clBtnFace

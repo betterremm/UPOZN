@@ -223,15 +223,8 @@ Begin
 End;
 
 Procedure TAddEditBankAccountForm.EditCodeChange(Sender: TObject);
-Var
-    Text: String;
+
 Begin
-    Text := EditCode.Text;
-    If Not IsCurrIntCorrect(Text) Then
-    Begin
-        EditCode.Text := Text;
-        EditCode.SelStart := Length(Text);
-    End;
 
     If Length(EditCode.Text) > 0 Then
         IsFilled[1] := True

@@ -1,11 +1,11 @@
-object ShowAccountsForm: TShowAccountsForm
+object ShowForm: TShowForm
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'caption'
   ClientHeight = 302
-  ClientWidth = 598
+  ClientWidth = 601
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,9 +15,10 @@ object ShowAccountsForm: TShowAccountsForm
   Position = poScreenCenter
   OnCreate = FormCreate
   OnHelp = FormHelp
+  OnShow = FormShow
   TextHeight = 15
   object SGShow: TStringGrid
-    Left = -8
+    Left = 0
     Top = 0
     Width = 608
     Height = 304

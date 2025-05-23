@@ -45,7 +45,32 @@ Const
     BankAcctSigRec: TUniversalRecord = (RecType: RtBankAccount; BankAccount: (Code: 451004; AccNumber: 44341234; Balance: 999123.0;
         AccType: BACurrent; CollectionPercentage: 23.44));
 
-Function IsSignatureClientRecord(Const Rec: TUniversalRecord): Boolean; StdCall;
+Function RoundCurrencyTo2(Value: Currency): Currency;
+Var
+    IntPart: Int64;
+    FracPart: Currency;
+    ThirdDigit: Integer;
+Begin
+    Value := Value * 1000;
+    IntPart := Trunc(Value);
+    FracPart := Value - IntPart;
+
+    ThirdDigit := IntPart Mod 10;
+    IntPart := IntPart Div 10;
+
+    If ThirdDigit > 5 Then
+        Inc(IntPart)
+    Else
+        If ThirdDigit = 5 Then
+        Begin
+            If Odd(IntPart) Then
+                Inc(IntPart);
+        End;
+
+    Result := IntPart / 100;
+End;
+
+Function IsSignatureClientRecord(Const Rec: TUniversalRecord): Boolean;
 Begin
     Result := (Rec.RecType = RtClient) And (Rec.Client.Code = -999) And (Rec.Client.SurName = 'SIGNATURE');
 End;
@@ -57,7 +82,43 @@ Begin
         (Rec.BankAccount.CollectionPercentage = 23.44);
 End;
 
-Function SaveBankFile(Const AFileName: String): TFileStatus;
+Function IsClientUnique(Code: Integer; ClientList: TClientList): Boolean;
+Var
+    IsUnique: Boolean;
+    TempNode: PClientNode;
+Begin
+    IsUnique := True;
+
+    TempNode := ClientList.Head;
+    While (TempNode <> Nil) And IsUnique Do
+    Begin
+        If TempNode.Code = Code Then
+            IsUnique := False
+        Else
+            TempNode := TempNode^.Next;
+    End;
+    IsClientUnique := IsUnique;
+
+End;
+
+Function IsBankAccountUnique(AccNumber: Integer; BankAccountList: TBankAccountList): Boolean;
+Var
+    IsUnique: Boolean;
+    TempNode: PBankAccountNode;
+Begin
+    IsUnique := True;
+    TempNode := BankAccountList.Head;
+    While (TempNode <> Nil) And IsUnique Do
+    Begin
+        If TempNode.AccNumber = AccNumber Then
+            IsUnique := False
+        Else
+            TempNode := TempNode^.Next;
+    End;
+    IsBankAccountUnique := IsUnique;
+End;
+
+Function SaveBankFile(Const AFileName: String; ClientList: TClientList; BankAccountList: TBankAccountList): TFileStatus; StdCall;
 Var
     FileRec: File Of TUniversalRecord;
     CurrNode: PClientNode;
@@ -71,12 +132,10 @@ Begin
         {$I-} Reset(FileRec); {$I+}
         If IOResult = 0 Then
         Begin
-            //file exists: try rewrite to clear
             {$I-} Rewrite(FileRec); {$I+}
         End
         Else
         Begin
-            //new file
             {$I-} Rewrite(FileRec); {$I+}
         End;
 
@@ -86,11 +145,9 @@ Begin
         End
         Else
         Begin
-            //write signature for clients
             URec := ClientSigRec;
             Write(FileRec, URec);
-            //write all clients
-            CurrNode := BankForm.ClientList.Head;
+            CurrNode := ClientList.Head;
             While Assigned(CurrNode) Do
             Begin
                 URec.RecType := RtClient;
@@ -100,12 +157,10 @@ Begin
                 CurrNode := CurrNode^.Next;
             End;
 
-            //write signature for bank accounts
             URec := BankAcctSigRec;
             Write(FileRec, URec);
 
-            //write all bank accounts
-            AcctNode := BankForm.BankAccountList.Head;
+            AcctNode := BankAccountList.Head;
             While Assigned(AcctNode) Do
             Begin
                 URec.RecType := RtBankAccount;
@@ -126,13 +181,15 @@ Begin
     End;
 End;
 
-Function OpenBankFile(Const AFileName: String): TFileStatus; StdCall;
+Function OpenBankFile(Const AFileName: String; Var ClientList: TClientList; Var BankAccountList: TBankAccountList): TFileStatus; StdCall;
 Var
     FileRec: File Of TUniversalRecord;
     URec: TUniversalRecord;
     InClients: Boolean;
     InAccounts: Boolean;
     Fine: Boolean;
+    PClient: PClientNode;
+    PBankAccount: PBankAccountNode;
 Begin
     OpenBankFile := FsOK;
 
@@ -151,8 +208,6 @@ Begin
         End
         Else
         Begin
-
-            //initialize state
             InClients := False;
             InAccounts := False;
             Fine := True;
@@ -162,7 +217,6 @@ Begin
 
                 If Not InClients Then
                 Begin
-                    //expect client signature
                     If IsSignatureClientRecord(URec) Then
                     Begin
                         InClients := True;
@@ -181,15 +235,59 @@ Begin
                             InAccounts := True;
                         End
                         Else
-                            //add client node
-                            BankForm.AddClient(URec.Client.Code, URec.Client.SurName);
+                        Begin
+                            With URec.Client Do
+                            Begin
+                                If IsClientUnique(Code, ClientList) Then
+                                Begin
+                                    New(PClient);
+                                    PClient^.Code := Abs(Code);
+                                    PClient^.SurName := SurName;
+                                    PClient.Next := Nil;
+                                    PClient.Prev := ClientList.Tail;
+                                    If ClientList.Head = Nil Then
+                                    Begin
+                                        ClientList.Tail := PClient;
+                                        ClientList.Head := PClient;
+                                    End
+                                    Else
+                                    Begin
+                                        ClientList.Tail.Next := PClient;
+                                        ClientList.Tail := PClient;
+                                    End;
+                                End
+                            End;
+
+                        End;
+
                     End
                     Else
                         If InAccounts Then
                         Begin
-                            //add bank account node
                             With URec.BankAccount Do
-                                BankForm.AddBankAccount(Code, AccNumber, Balance, AccType, CollectionPercentage);
+                            Begin
+                                If IsBankAccountUnique(AccNumber, BankAccountList) Then
+                                Begin
+                                    New(PBankAccount);
+                                    PBankAccount^.Code := Abs(Code);
+                                    PBankAccount^.AccNumber := Abs(AccNumber);
+                                    PBankAccount^.Balance := RoundCurrencyTo2(Balance);
+                                    PBankAccount^.AccType := AccType;
+                                    PBankAccount^.CollectionPercentage := RoundCurrencyTo2(CollectionPercentage);
+                                    PBankAccount.Next := Nil;
+                                    PBankAccount.Prev := BankAccountList.Tail;
+                                    If BankAccountList.Head = Nil Then
+                                    Begin
+                                        BankAccountList.Tail := PBankAccount;
+                                        BankAccountList.Head := PBankAccount;
+                                    End
+                                    Else
+                                    Begin
+                                        BankAccountList.Tail.Next := PBankAccount;
+                                        BankAccountList.Tail := PBankAccount;
+                                    End;
+                                End
+                            End;
                         End;
             End;
 

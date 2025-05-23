@@ -12,7 +12,8 @@ uses
   InstrUnit in 'InstrUnit.pas',
   AddEditBankAccountUnit in 'AddEditBankAccountUnit.pas' {AddEditBankAccountForm},
   TransferMoneyUnit in 'TransferMoneyUnit.pas' {TransferMoneyForm},
-  ShowAccountsUnit in 'ShowAccountsUnit.pas' {ShowAccountsForm};
+  ShowUnit in 'ShowUnit.pas' {ShowForm},
+  SearchUnit in 'SearchUnit.pas' {SearchForm};
 
 {$R *.res}
 
@@ -22,6 +23,7 @@ begin
   Application.CreateForm(TBankForm, BankForm);
   Application.CreateForm(TAddEditBankAccountForm, AddEditBankAccountForm);
   Application.CreateForm(TTransferMoneyForm, TransferMoneyForm);
-  Application.CreateForm(TShowAccountsForm, ShowAccountsForm);
+  Application.CreateForm(TShowForm, ShowForm);
+  Application.CreateForm(TSearchForm, SearchForm);
   Application.Run;
 end.

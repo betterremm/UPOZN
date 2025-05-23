@@ -51,8 +51,7 @@ Begin
 End;
 
 Procedure TAddEditClientForm.EditCodeChange(Sender: TObject);
-Var
-    Text: String;
+
 Begin
 
     If Length(EditCode.Text) > 0 Then
