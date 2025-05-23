@@ -47,7 +47,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
   object LbAccountType: TLabel
     Left = 24
     Top = 169
-    Width = 54
+    Width = 53
     Height = 15
     Caption = #1058#1080#1087' '#1089#1095#1077#1090#1072
   end
@@ -68,7 +68,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
     Height = 25
     Caption = #1055#1088#1080#1085#1103#1090#1100
     Enabled = False
-    TabOrder = 1
+    TabOrder = 5
     OnClick = BtnAcceptClick
   end
   object EditAccNumber: TEdit
@@ -77,7 +77,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
     Width = 121
     Height = 23
     MaxLength = 9
-    TabOrder = 2
+    TabOrder = 1
     OnChange = EditAccNumberChange
     OnKeyPress = EditNumKeyPress
   end
@@ -87,7 +87,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
     Width = 121
     Height = 23
     MaxLength = 12
-    TabOrder = 3
+    TabOrder = 2
     OnChange = EditBalanceChange
     OnKeyPress = EditDecimalKeyPress
   end
@@ -97,7 +97,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
     Width = 121
     Height = 23
     MaxLength = 4
-    TabOrder = 5
+    TabOrder = 4
     OnChange = EditCollectionPercentageChange
     OnKeyPress = EditDecimalKeyPress
   end
@@ -107,7 +107,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
     Width = 122
     Height = 23
     Style = csDropDownList
-    TabOrder = 4
+    TabOrder = 3
     OnChange = CBTypeChange
     Items.Strings = (
       #1057#1073#1077#1088#1077#1075#1072#1090#1077#1083#1100#1085#1099#1081

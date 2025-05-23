@@ -19,7 +19,7 @@ Type
         SGShow: TStringGrid;
         Procedure FormCreate(Sender: TObject);
         Function FormHelp(Command: Word; Data: THelpEventData; Var CallHelp: Boolean): Boolean;
-        Procedure AddAccount(Code, AccNumber: Integer; Balance: Currency; AccType: String; Percentage: Currency);
+        Procedure AddAccount(Code, AccNumber: Integer; Balance: Currency; AccType: String; CollectionPercentage: Currency; I: Integer);
     Private
         { }
     Public
@@ -33,9 +33,14 @@ Implementation
 
 {$R *.dfm}
 
-Procedure TShowAccountsForm.AddAccount(Code, AccNumber: Integer; Balance: Currency; AccType: String; Percentage: Currency);
+Procedure TShowAccountsForm.AddAccount(Code, AccNumber: Integer; Balance: Currency; AccType: String; CollectionPercentage: Currency;
+    I: Integer);
 Begin
-    //
+    SGShow.Cells[0, I] := IntToStr(Code);
+    SGShow.Cells[1, I] := IntToStr(AccNumber);
+    SGShow.Cells[2, I] := CurrToStr(Balance) + ' ð.';
+    SGShow.Cells[3, I] := AccType;
+    SGShow.Cells[4, I] := CurrToStr(CollectionPercentage) + '%';
 End;
 
 Procedure TShowAccountsForm.FormCreate(Sender: TObject);

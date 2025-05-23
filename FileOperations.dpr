@@ -1,6 +1,4 @@
-Unit FileOperations;
-
-Interface
+Library FileOperations;
 
 Uses
     System.SysUtils,
@@ -41,18 +39,13 @@ Type
                 (BankAccount: TBankAccountData);
     End;
 
-Function OpenBankFile(Const AFileName: String): TFileStatus; StdCall;
-Function SaveBankFile(Const AFileName: String): TFileStatus; StdCall;
-
-Implementation
-
 Const
     ClientSigRec: TUniversalRecord = (RecType: RtClient; Client: (Code: - 999; SurName: 'SIGNATURE'));
 
     BankAcctSigRec: TUniversalRecord = (RecType: RtBankAccount; BankAccount: (Code: 451004; AccNumber: 44341234; Balance: 999123.0;
         AccType: BACurrent; CollectionPercentage: 23.44));
 
-Function IsSignatureClientRecord(Const Rec: TUniversalRecord): Boolean;
+Function IsSignatureClientRecord(Const Rec: TUniversalRecord): Boolean; StdCall;
 Begin
     Result := (Rec.RecType = RtClient) And (Rec.Client.Code = -999) And (Rec.Client.SurName = 'SIGNATURE');
 End;
@@ -205,6 +198,10 @@ Begin
     End;
 End;
 
-Exports OpenBankFile, SaveBankFile;
+Exports
+    OpenBankFile,
+    SaveBankFile;
+
+Begin
 
 End.

@@ -70,7 +70,7 @@ object TransferMoneyForm: TTransferMoneyForm
     Width = 75
     Height = 25
     Caption = #1055#1077#1088#1077#1074#1077#1089#1090#1080
-    TabOrder = 3
+    TabOrder = 4
     OnClick = BtnAcceptClick
   end
   object CBSenderPays: TCheckBox
@@ -79,6 +79,6 @@ object TransferMoneyForm: TTransferMoneyForm
     Width = 156
     Height = 42
     Caption = #1050#1086#1084#1080#1089#1089#1080#1102' '#1086#1087#1083#1072#1095#1080#1074#1072#1077#1090#13#10#1086#1090#1087#1088#1072#1074#1080#1090#1077#1083#1100
-    TabOrder = 4
+    TabOrder = 3
   end
 end

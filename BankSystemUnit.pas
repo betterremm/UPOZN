@@ -218,7 +218,7 @@ Begin
     End;
 
     //Вычисление комиссии
-    Collection := RoundCurrencyTo2(Amount * SenderNode^.CollectionPercentage) / 100;
+    Collection := RoundCurrencyTo2(Amount * SenderNode^.CollectionPercentage / 100);
 
     //Проверка баланса отправителя
     If SenderPaysCollection Then
@@ -239,7 +239,7 @@ Begin
         Else
         Begin
             SenderNode^.Balance := SenderNode^.Balance - Amount;
-            RecipientNode^.Balance := RecipientNode^.Balance + TempAmount;
+            RecipientNode^.Balance := RecipientNode^.Balance + Amount;
         End;
     End;
 
@@ -588,6 +588,11 @@ Begin
         BitBtnDelete.Enabled := False;
         BitBtnEdit.Enabled := False;
     End;
+
+    If (CBChoice.ItemIndex = CB_CHOICE_CLIENTS) And (ClientList.Head <> Nil) Then
+        BitBtnShowAccounts.Enabled := True
+    Else
+        BitBtnShowAccounts.Enabled := False;
 End;
 
 Procedure TBankForm.ShowBankAccounts();
@@ -790,16 +795,30 @@ End;
 Procedure TBankForm.BitBtnShowAccountsClick(Sender: TObject);
 Var
     TempClientNode: PClientNode;
-    I: Integer;
+    TempBankAccountNode: PBankAccountNode;
+    CompCode, I: Integer;
 Begin
     ShowAccountsForm := TShowAccountsForm.Create(Self);
     TempClientNode := ClientList.Head;
     For I := 2 To SGMain.Selection.Top Do
         TempClientNode := TempClientNode.Next;
-
-
-
-    ShowAccountsForm.ShowModal();
+    CompCode := TempClientNode^.Code;
+    I := 1;
+    TempBankAccountNode := BankAccountList.Head;
+    While TempBankAccountNode <> Nil Do
+    Begin
+        If TempBankAccountNode^.Code = CompCode Then
+        Begin
+            With TempBankAccountNode^ Do
+                ShowAccountsForm.AddAccount(Code, AccNumber, Balance, BA_STRING_ARRAY[Ord(AccType)], CollectionPercentage, I);
+            Inc(I);
+        End;
+        TempBankAccountNode := TempBankAccountNode.Next;
+    End;
+    If I < 1 Then
+        ShowAccountsForm.ShowModal()
+    Else
+        MessageBox(BankForm.Handle, 'У данного пользователя нет счетов!', 'Внимание', MB_ICONWARNING + MB_OK);
 
     ShowAccountsForm.Destroy;
     ShowAccountsForm := Nil;
@@ -912,8 +931,8 @@ Begin
     InstrForm := Nil;
 End;
 
-Function OpenBankFile(Const AFileName: String): TBankForm.TFileStatus; StdCall; External 'FileOperations.dll';
-Function SaveBankFile(Const AFileName: String): TBankForm.TFileStatus; StdCall; External 'FileOperations.dll';
+//Function OpenBankFile(Const AFileName: String): TBankForm.TFileStatus; StdCall; External 'FileOperations.dll';
+//Function SaveBankFile(Const AFileName: String): TBankForm.TFileStatus; StdCall; External 'FileOperations.dll';
 
 Procedure TBankForm.NOpenClick(Sender: TObject);
 Var
@@ -924,7 +943,7 @@ Begin
         //Очистка текущих списков, если требуется
         ClearClients;
         ClearBankAccounts;
-        Status := OpenBankFile(OpenDialog.FileName);
+        //Status := OpenBankFile(OpenDialog.FileName);
         Case Status Of
             FsOK:
                 ShowMessage('Файл успешно загружен.');
@@ -960,7 +979,7 @@ Begin
     Else
         If SaveDialog.Execute Then
         Begin
-            Status := SaveBankFile(SaveDialog.FileName);
+            //Status := SaveBankFile(SaveDialog.FileName);
             Case Status Of
                 FsOK:
                     ShowMessage('Файл успешно сохранён.');
