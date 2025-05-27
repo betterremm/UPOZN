@@ -78,7 +78,7 @@ Type
         Procedure BitBtnShowAccountsClick(Sender: TObject);
         Procedure BitBtnSearchClick(Sender: TObject);
     Private
-        { Private declarations }
+        FileNotSaved: Boolean;
     Public Type
 
         TFileStatus = (FsOK, FsNotFound, FsLocked, FsInvalidSignature);
@@ -373,7 +373,7 @@ End;
 
 Procedure TBankForm.AddClient(Code: Integer; SurName: String);
 Var
-    PClient: TBankForm.PClientNode;
+    PClient, Pclient2: TBankForm.PClientNode;
 Begin
 
     If IsClientUnique(Code) Then
@@ -486,6 +486,7 @@ Begin
     If MessageBox(BankForm.Handle, 'Вы уверены, что хотите удалить банковский аккаунт?', 'Удалить?', MB_ICONWARNING + MB_YESNO)
         = ID_YES Then
     Begin
+        FileNotSaved := True;
         DelNode := BankAccountList.Head;
         For I := 2 To SGMain.Selection.Top Do
             DelNode := DelNode.Next;
@@ -531,6 +532,7 @@ Var
 Begin
     If MessageBox(BankForm.Handle, 'Вы уверены, что хотите удалить клиента?', 'Удалить?', MB_ICONWARNING + MB_YESNO) = ID_YES Then
     Begin
+        FileNotSaved := True;
         DelNode := ClientList.Head;
         For I := 2 To SGMain.Selection.Top Do
             DelNode := DelNode.Next;
@@ -722,7 +724,10 @@ Begin
         AddEditClientForm := TAddEditClientForm.Create(Self);
         AddEditClientForm.ShowModal();
         If AddEditClientForm.ClosedByButton Then
+        Begin
             AddClient(StrToInt(AddEditClientForm.EditCode.Text), AddEditClientForm.EditSurname.Text);
+            FileNotSaved := True;
+        End;
         AddEditClientForm.Destroy;
         AddEditClientForm := Nil;
         ShowClients;
@@ -737,6 +742,7 @@ Begin
                 Begin
                     AddBankAccount(StrToInt(EditCode.Text), StrToInt(EditAccNumber.Text), StrToCurr(EditBalance.Text),
                         TBankAccountType(CBType.ItemIndex), StrToCurr(EditCollectionPercentage.Text));
+                    FileNotSaved := True;
                 End;
             AddEditBankAccountForm.Destroy;
             AddEditBankAccountForm := Nil;
@@ -785,6 +791,7 @@ Begin
                         ChangeAllBankAccountCodes(TempClientPointer^.Code, StrToInt(EditCode.Text));
                     TempClientPointer^.Code := StrToInt(EditCode.Text);
                     TempClientPointer^.SurName := EditSurName.Text;
+                    FileNotSaved := True;
                 End
                 Else
                     MessageBox(BankForm.Handle, 'Изменения не были применены, клиент с таким номером уже существует.', 'Внимание!',
@@ -830,6 +837,7 @@ Begin
                         TempBankAccountPointer^.Balance := StrToCurr(EditBalance.Text);
                         TempBankAccountPointer^.AccType := TBankAccountType(CBType.ItemIndex);
                         TempBankAccountPointer^.CollectionPercentage := StrToCurr(EditCollectionPercentage.Text);
+                        FileNotSaved := True;
                     End
                     Else
                         MessageBox(BankForm.Handle, 'Изменения не были применены, аккаунт с таким номером уже существует.', 'Внимание!',
@@ -1008,9 +1016,24 @@ Begin
 End;
 
 Procedure TBankForm.FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
+Var
+    Res: Integer;
 Begin
-    CanClose := MessageBox(BankForm.Handle, 'Вы уверены что хотите выйти?', 'Выйти?', MB_ICONQUESTION + MB_YESNO) = ID_YES;
-
+    CanClose := True;
+    Repeat
+        If FileNotSaved Then
+        Begin
+            Res := MessageBox(BankForm.Handle, 'Хотите сохранить файл перед выходом?', 'Сохранить?', MB_ICONQUESTION + MB_YESNOCANCEL);
+            If Res = ID_YES Then
+                NSaveClick(Sender)
+            Else
+                If Res = ID_CANCEL Then
+                Begin
+                    CanClose := False;
+                    Res := ID_NO;
+                End;
+        End;
+    Until (Not FileNotSaved) Or (Res = ID_NO);
 End;
 
 Procedure TBankForm.FormCreate(Sender: TObject);
@@ -1126,7 +1149,10 @@ Begin
             Status := SaveBankFile(SaveDialog.FileName, ClientList, BankAccountList);
             Case Status Of
                 FsOK:
-                    MessageBox(BankForm.Handle, 'Файл успешно был сохранен!', 'Успех!', MB_ICONINFORMATION + MB_OK);
+                    Begin
+                        MessageBox(BankForm.Handle, 'Файл успешно был сохранен!', 'Успех!', MB_ICONINFORMATION + MB_OK);
+                        FileNotSaved := False;
+                    End;
                 FsLocked:
                     MessageBox(BankForm.Handle, 'Не удалось сохранить файл, он был занят другим процессом.', 'Внимание!',
                         MB_ICONWARNING + MB_OK)

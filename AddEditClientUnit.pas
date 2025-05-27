@@ -27,6 +27,7 @@ Type
         Procedure EditCodeChange(Sender: TObject);
         Procedure EditSurnameChange(Sender: TObject);
         Procedure BtnAcceptClick(Sender: TObject);
+        Procedure EditCodeContextPopup(Sender: TObject; MousePos: TPoint; Var Handled: Boolean);
     Private Const
         TAllowedKeys: Set Of Char = ['0' .. '9', #8, #127];
 
@@ -61,6 +62,11 @@ Begin
 
     BtnAccept.Enabled := IsFilled[1] And IsFilled[2];
 
+End;
+
+Procedure TAddEditClientForm.EditCodeContextPopup(Sender: TObject; MousePos: TPoint; Var Handled: Boolean);
+Begin
+    Handled := True;
 End;
 
 Procedure TAddEditClientForm.EditCodeKeyPress(Sender: TObject; Var Key: Char);

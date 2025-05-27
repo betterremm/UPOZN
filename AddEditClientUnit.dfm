@@ -38,6 +38,7 @@ object AddEditClientForm: TAddEditClientForm
     MaxLength = 8
     TabOrder = 0
     OnChange = EditCodeChange
+    OnContextPopup = EditCodeContextPopup
     OnKeyPress = EditCodeKeyPress
   end
   object EditSurname: TEdit

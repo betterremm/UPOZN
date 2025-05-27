@@ -59,6 +59,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
     MaxLength = 9
     TabOrder = 0
     OnChange = EditCodeChange
+    OnContextPopup = EditCodeContextPopup
     OnKeyPress = EditNumKeyPress
   end
   object BtnAccept: TButton
@@ -79,6 +80,7 @@ object AddEditBankAccountForm: TAddEditBankAccountForm
     MaxLength = 9
     TabOrder = 1
     OnChange = EditAccNumberChange
+    OnContextPopup = EditCodeContextPopup
     OnKeyPress = EditNumKeyPress
   end
   object EditBalance: TEdit

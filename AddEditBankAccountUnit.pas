@@ -39,6 +39,7 @@ Type
         Procedure EditBalanceChange(Sender: TObject);
         Procedure CBTypeChange(Sender: TObject);
         Procedure EditCollectionPercentageChange(Sender: TObject);
+        Procedure EditCodeContextPopup(Sender: TObject; MousePos: TPoint; Var Handled: Boolean);
     Private Const
         TAllowedKeys: Set Of Char = ['0' .. '9', #8, #127];
 
@@ -233,6 +234,11 @@ Begin
 
     BtnAccept.Enabled := IsFilledCheck(IsFilled);
 
+End;
+
+Procedure TAddEditBankAccountForm.EditCodeContextPopup(Sender: TObject; MousePos: TPoint; Var Handled: Boolean);
+Begin
+    Handled := True;
 End;
 
 Procedure TAddEditBankAccountForm.EditCollectionPercentageChange(Sender: TObject);
