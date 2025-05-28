@@ -863,7 +863,7 @@ Begin
     Begin
         Code := StrToInt(SearchForm.EditCode.Text);
         ShowForm := TShowForm.Create(Self);
-        If CBChoice.ItemIndex = CB_CHOICE_ACCOUNTS Then
+        If SearchForm.CBChoice.ItemIndex = CB_CHOICE_ACCOUNTS Then
         Begin
             ShowForm.WorkWithClients := False;
             I := 1;
@@ -882,7 +882,7 @@ Begin
             ShowForm.SGShow.RowCount := I;
         End
         Else
-            If CBChoice.ItemIndex = CB_CHOICE_CLIENTS Then
+            If SearchForm.CBChoice.ItemIndex = CB_CHOICE_CLIENTS Then
             Begin
                 ShowForm.WorkWithClients := True;
                 I := 1;
@@ -1021,7 +1021,7 @@ Var
 Begin
     CanClose := True;
     Repeat
-        If FileNotSaved Then
+        If FileNotSaved And (ClientList.Head <> Nil) And (BankAccountList.Head <> Nil) Then
         Begin
             Res := MessageBox(BankForm.Handle, 'Хотите сохранить файл перед выходом?', 'Сохранить?', MB_ICONQUESTION + MB_YESNOCANCEL);
             If Res = ID_YES Then
